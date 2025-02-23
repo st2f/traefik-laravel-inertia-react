@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.btn {
+    @apply font-bold py-1 px-1 rounded;
+}
+.btn-blue {
+    @apply bg-teal-500 text-white;
+}
+.btn-blue:hover {
+    @apply bg-teal-700;
+}
+
+h1 {
+    @apply text-3xl font-semibold;
+}
+
+h2 {
+    @apply text-xl font-semibold;
+}
+
+/* p {
+    @apply text-xl font-semibold;
+} */
+
+.line-break {
+    white-space: pre-wrap;
+  }
+
+.avatar {
+    border-radius: 50%;
+}
