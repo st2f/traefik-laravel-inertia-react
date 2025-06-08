@@ -1,4 +1,4 @@
-<?php //echo "test";exit;
+<?php //echo "403";exit;
 use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Http\Request;
 

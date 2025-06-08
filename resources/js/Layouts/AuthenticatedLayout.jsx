@@ -32,6 +32,9 @@ export default function Authenticated({ user, header, children, title='Admin Das
                 <NavLink href={route('dashboard')} active={route().current('dashboard')}>
                   Dashboard
                 </NavLink>
+                <NavLink href={route('categories')} active={route().current('categories')}>
+                 Categories
+                </NavLink>
               </div>
             </div>
 
@@ -63,7 +66,7 @@ export default function Authenticated({ user, header, children, title='Admin Das
                   </Dropdown.Trigger>
 
                   <Dropdown.Content>
-                    <Dropdown.Link href={route('profile.edit')}>Profile</Dropdown.Link>
+                    <Dropdown.Link href={route('profile.edit')}>Profile1</Dropdown.Link>
                     <Dropdown.Link href={route('logout')} method="post" as="button">
                       Log Out
                     </Dropdown.Link>
@@ -102,6 +105,9 @@ export default function Authenticated({ user, header, children, title='Admin Das
           <div className="pt-2 pb-3 space-y-1">
             <ResponsiveNavLink href={route('dashboard')} active={route().current('dashboard')}>
               Dashboard
+            </ResponsiveNavLink>
+            <ResponsiveNavLink href={route('categories')} active={route().current('categories')}>
+              Categories
             </ResponsiveNavLink>
           </div>
 

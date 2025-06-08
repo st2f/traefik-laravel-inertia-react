@@ -12,17 +12,25 @@
     @apply bg-teal-700;
 }
 
+pre {
+    @apply py-1;
+}
+
+hr {
+    @apply py-1 pb-1;
+}
+
 h1 {
-    @apply text-3xl font-semibold;
+    @apply py-3 text-3xl font-semibold;
 }
 
 h2 {
-    @apply text-xl font-semibold;
+    @apply py-3 text-xl font-semibold;
 }
 
-/* p {
-    @apply text-xl font-semibold;
-} */
+p {
+    @apply py-2;
+}
 
 .line-break {
     white-space: pre-wrap;
@@ -30,4 +38,9 @@ h2 {
 
 .avatar {
     border-radius: 50%;
+}
+
+
+a:hover {
+    color: lightslategray;
 }

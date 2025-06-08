@@ -4,17 +4,17 @@ export function useData(url) {
   const [data, setData] = useState([]);
   useEffect(() => {
     if (url) {
-      //let ignore = false;
+      let ignore = false;
       fetch(url)
         .then(response => response.json())
         .then(json => {
-          //if (!ignore) {
+          if (!ignore) {
             setData(json);
-          //}
+          }
         });
-      // return () => {
-      //   ignore = true;
-      // };
+      return () => {
+        ignore = true;
+      };
     }
   }, [url]);
   return data;

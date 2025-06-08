@@ -10,7 +10,12 @@ RUN apt-get update && apt-get install -y \
   libzip-dev \  
   libicu-dev \  
   zip \   
-  unzip  
+  unzip \
+  default-mysql-client 
+  # php8.3-dom \
+  # php8.3-mysql \
+  # php8.3-xml \
+  # php8.3-mbstring 
 
 # Clean up to reduce image size
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -20,6 +25,7 @@ RUN docker-php-ext-install \
     pdo_mysql \  
     mbstring \   
     exif \  
+    xml \
     pcntl \  
     bcmath \ 
     gd \  

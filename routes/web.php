@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ArticleController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -31,10 +32,17 @@ Route::get('/dashboard', function () {
 // admin
 
 Route::middleware('auth')->group(function () {
+    //categories
+    Route::get('/content/categories', [CategoryController::class, 'edit'])->name('categories');
+    Route::patch('/content/category/{id}', [CategoryController::class, 'update'])->name('category.update');
+    Route::post('/content/category', [CategoryController::class, 'create'])->name('category.create');
+    Route::post('/content/category/delete', [CategoryController::class, 'destroy'])->name('category.destroy');
     // article
+    Route::get('/content/new', [ArticleController::class, 'new'])->name('article.new');
+    Route::post('/content/create', [ArticleController::class, 'create'])->name('article.create');
     Route::get('/content/{id}', [ArticleController::class, 'edit'])->name('article.edit');
     Route::patch('/content/{id}', [ArticleController::class, 'update'])->name('article.update');
-    Route::delete('/content/{id}', [ArticleController::class, 'destroy'])->name('article.destroy');
+    Route::get('/content/delete/{id}', [ArticleController::class, 'destroy'])->name('article.destroy');
     // profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

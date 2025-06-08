@@ -2,7 +2,6 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
-import DangerButton from '@/Components/DangerButton';
 import TextInput from '@/Components/TextInput';
 import ActionButton from '@/Components/ActionButton';
 import TextArea from '@/Components/TextArea';
@@ -10,20 +9,19 @@ import SelectMenu from '@/Components/SelectMenu';
 import CodeHighlighter from '@/Components/CodeHighlight';
 import { useForm } from '@inertiajs/react';
 import { Transition } from '@headlessui/react';
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { useData } from '@/Services/useData.js';
-import { Link } from '@inertiajs/react';
 
-export default function Edit({ auth, id }) {
-  const article = useData(`/api/articles/` + id);
+export default function Edit({ auth}) {
+
   const categories = useData(`/api/categories`);
 
   const mapCategories = categories.map(({ categoryId: value, categoryName: label }) => ({
-    value,
-    label,
-  }));
+      value,
+      label,
+    }));
 
-  const { data, setData, patch, errors, recentlySuccessful } = useForm({});
+  const { data, setData, post, errors, recentlySuccessful } = useForm({});
 
   const [preview, setPreview] = useState('');
 
@@ -47,33 +45,25 @@ export default function Edit({ auth, id }) {
 
   const submit = (e) => {
     e.preventDefault()
-    patch(route('article.update', {id: article.id}));
+    post(route('article.create'));
   }
 
   return (
     <AuthenticatedLayout
     user={auth.user}
-    header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Article {id} update</h2>}
-    title={article.title}
+    header={<h2 className="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">New article</h2>}
+    title="New article"
     >
-
-    <div className="py-8 lg:px-20 lg:pe-20  lg:mx-auto">
+    <div className="py-12">
     <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 ">
     <div className="p-4 sm:p-8 bg-white dark:bg-gray-800 shadow sm:rounded-lg">
-
-    <form onSubmit={submit} className="space-y-6">
+    <form onSubmit={submit} className=" space-y-6">
 
       <div>
-        <a href={route('article', id )}>
-          <span className="inline-flex items-baseline">
-            <img src="/images/external.svg" alt="" className="self-center w-5 h-5 rounded-full mx-1" />
-            <span><InputLabel htmlFor="title" value="Title" /></span>
-          </span>
-        </a>
+        <InputLabel htmlFor="title" value="Title" />
         <TextInput
         id="title"
         type="text"
-        defaultValue={article.title}
         className="mt-1 block w-full"
         onChange={handleChange}
         isFocused
@@ -85,12 +75,12 @@ export default function Edit({ auth, id }) {
       <div>
         <InputLabel htmlFor="category" value="Category" />
         <SelectMenu
-        id="category"
-        items={mapCategories}
-        defaultValue={article.category}
-        selectedValue={data && data.category || article.category}
-        className="mt-1 block w-full"
-        onChange={handleChange}
+          id="category"
+          items={mapCategories}
+          defaultValue='0'
+          selectedValue={data && data.category}
+          className="mt-1 block w-full"
+          onChange={handleChange}
         />
         <InputError className="mt-2" message={errors.category} />
       </div>
@@ -131,7 +121,7 @@ export default function Edit({ auth, id }) {
           <TextArea
           id="content"
           className="mt-1"
-          defaultValue={data && data.content || article.content}
+          defaultValue={data && data.content}
           onChange={handleChange}
           required
           autoComplete="content"
@@ -143,21 +133,17 @@ export default function Edit({ auth, id }) {
         <InputError className="mt-2" message={errors.content} />
 
         {preview && (
-          <div className="pt-3 pb-3 block w-full border-gray-300 dark:border-gray-700 rounded-md shadow-sm " >
+          <div className="pt-3 pb-3 block w-full border-gray-300 dark:border-gray-700  rounded-md shadow-sm " >
             <hr></hr>
             <CodeHighlighter
               id="content-preview"
-              codeToHighlight={data && data.content || article.content}
+              codeToHighlight={data && data.content}
             />
           </div>
         )}
       </div>
 
     </form>
-    <Link href={route('article.destroy', {id: id})}>
-      <DangerButton>delete</DangerButton>
-    </Link>
-
     </div>
     </div>
     </div>

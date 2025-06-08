@@ -3,10 +3,18 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+
 use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
+    use HasApiTokens, HasFactory, Notifiable;
+
+    protected $primaryKey = 'categoryId';
+    public $timestamps = false;
+
     /**
      * The attributes that are mass assignable.
      *
