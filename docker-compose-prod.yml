@@ -37,7 +37,7 @@ services:
       - website2
 
   mariadb:
-    image: mariadb:latest
+    image: mariadb:11.7.2
     container_name: mariadb
     restart: always
     environment:
@@ -49,7 +49,7 @@ services:
       APP_DB_USER: $DB_USERNAME
       APP_DB_PASSWD: $DB_PASSWORD
     volumes:
-      - ./dbdata:/var/lib/mysql
+      - mariadb_data:/var/lib/mysql
     labels:
       - traefik.enable=true
       - traefik.tcp.routers.mariadb.rule=HostSNI(`*`)
@@ -77,3 +77,5 @@ networks:
     name: "proxy"
     external: true
 
+volumes:
+  mariadb_data:
