@@ -22,3 +22,9 @@ public/storage
 storage/*.key
 vendor
 yarn-error.log
+playwright-report/
+test-results/
+trace/
+screenshots/
+videos/
+
