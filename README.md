@@ -10,7 +10,6 @@ this project is built on an empty cloud with a couple of docker containers: one 
 
 it is pushed via a github CI using parallel jobs
 
-![worflow-ci](https://github.com/user-attachments/assets/d321f8b1-b55d-4009-b8a1-721ee2c18b7e)
-
+<img width="2134" height="826" alt="image" src="https://github.com/user-attachments/assets/4c0efd42-8210-41a4-91dc-38ecda13f5ef" />
 
 
