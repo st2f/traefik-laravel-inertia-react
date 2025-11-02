@@ -1,0 +1,28 @@
+name: dependency-cache
+description: "Install and cache Node or PHP dependencies locally per repo hash"
+inputs:
+  dist_root:
+    description: "Path to the build directory"
+    required: true
+  cache_root:
+    description: "Path to the cache directory"
+    required: true
+  type:
+    description: "Dependency type: node or php"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Run dependency cache script
+      shell: bash
+      run: |
+        if [ "${{ inputs.type }}" = "node" ]; then
+          chmod +x ${{ github.action_path }}/index-node.sh
+          ${{ github.action_path }}/index-node.sh "${{ inputs.dist_root }}" "${{ inputs.cache_root }}"
+        elif [ "${{ inputs.type }}" = "php" ]; then
+          chmod +x ${{ github.action_path }}/index-php.sh
+          ${{ github.action_path }}/index-php.sh "${{ inputs.dist_root }}" "${{ inputs.cache_root }}"
+        else
+          echo "Unknown type: ${{ inputs.type }}. Must be 'node' or 'php'."
+          exit 1
+        fi

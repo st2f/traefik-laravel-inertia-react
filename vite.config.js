@@ -11,4 +11,17 @@ export default defineConfig({
         }),
         react(),
     ],
+    test: {
+        globals: true,           // allows using "describe/it/expect" without imports
+        environment: 'jsdom',    // simulates a browser environment
+        include: [
+            '**/*.test.{js,jsx}',      // unit/component tests
+            '**/__tests__/**/*.{js,jsx}'
+        ],
+        exclude: [
+            'resources/js/e2e/**',  // ignore Playwright e2e files
+            'node_modules/**'
+        ],
+        setupFiles: './resources/js/setupTests.js', // optional for RTL global imports
+    },
 });
