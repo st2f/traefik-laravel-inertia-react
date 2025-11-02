@@ -23,5 +23,6 @@ export default defineConfig({
             'node_modules/**'
         ],
         setupFiles: './resources/js/setupTests.js', // optional for RTL global imports
+        run: true, // always run tests without watch/HMR
     },
 });

@@ -6,7 +6,7 @@ concurrency:
 
 on:
   push:
-    branches: [main]
+    branches: [main, testing]
 
 env:
   SERVER_USER: ${{ secrets.SERVER_USER }}
@@ -53,9 +53,22 @@ jobs:
           echo $DIST_ROOT
           npm run build
 
-  deploy-test:
+  unit-tests:
     needs: build-assets
     runs-on: self-hosted
+    steps:
+      - name: Run unit tests
+        run: |
+          DIST_ROOT=/dist/${GITHUB_REPOSITORY//\//_}
+          cd "$DIST_ROOT"
+          echo $DIST_ROOT
+          export LARAVEL_BYPASS_ENV_CHECK=1
+          npm run test
+
+  deploy-test:
+    needs: unit-tests
+    runs-on: self-hosted
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
       - name: Verify build artifacts
@@ -82,6 +95,7 @@ jobs:
   e2e-tests:
     needs: deploy-test
     runs-on: self-hosted
+    if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
       - name: Load CI environment variables
