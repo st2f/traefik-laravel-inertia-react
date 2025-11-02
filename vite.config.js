@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
     plugins: [
         laravel({
-            input: 'resources/js/app.jsx',
+            input: 'resources/js/app.tsx',
             publicDirectory: "public",
             refresh: true,
         }),
@@ -15,8 +15,8 @@ export default defineConfig({
         globals: true,           // allows using "describe/it/expect" without imports
         environment: 'jsdom',    // simulates a browser environment
         include: [
-            '**/*.test.{js,jsx}',      // unit/component tests
-            '**/__tests__/**/*.{js,jsx}'
+            '**/*.test.{js,tsx}',      // unit/component tests
+            '**/__tests__/**/*.{js,tsx}'
         ],
         exclude: [
             'resources/js/e2e/**',  // ignore Playwright e2e files

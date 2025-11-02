@@ -6,7 +6,7 @@ concurrency:
 
 on:
   push:
-    branches: [main, testing]
+    branches: [main, testing, typescript-migration]
 
 env:
   SERVER_USER: ${{ secrets.SERVER_USER }}

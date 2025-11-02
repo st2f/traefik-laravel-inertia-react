@@ -6,10 +6,9 @@ simple laravel react app to enter/preview markdown content in database
 
 ![Screenshot from 2025-06-08 18-07-32](https://github.com/user-attachments/assets/aa92b1df-adce-49ac-b352-ba7537fef581)
 
-this project is built on an empty cloud with a couple of docker containers: one for traefik for the routing and SSL certificates, and other containers for app like this one
-
-it is pushed via a github CI using parallel jobs
+- **Stack:** Laravel + Inertia, React (TypeScript), TailwindCSS
+- **Deployment:** Docker + Traefik (network for local and cloud deployment)
+- **CI/CD:** GitHub Actions with parallel jobs for build & deployment
+- **Tests:** Vitest (unit), Playwright (end-to-end)
 
 <img width="2134" height="826" alt="image" src="https://github.com/user-attachments/assets/4c0efd42-8210-41a4-91dc-38ecda13f5ef" />
-
-
