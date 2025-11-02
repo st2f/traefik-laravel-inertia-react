@@ -5,6 +5,7 @@
 .env.production
 .env.testing
 .env.ci
+.DS_Store
 .fleet
 .idea
 .phpunit.cache
