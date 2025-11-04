@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM"],
+    "moduleResolution": "Node",
+    "types": ["playwright", "node"]
+  },
+  "include": [
+    "e2e/**/*.ts",
+    "types/**/*.d.ts"
+  ],
+  "exclude": ["node_modules", "public", "vendor"],
+}

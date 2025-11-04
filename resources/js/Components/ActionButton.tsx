@@ -1,4 +1,4 @@
-export default function ActionButton({ active = false, className = '', children, ...props }) {
+export default function ActionButton({ active = '', className = '', children, ...props }) {
   return (
     <>
     <button

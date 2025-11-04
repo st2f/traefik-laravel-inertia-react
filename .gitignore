@@ -12,6 +12,7 @@
 .phpunit.result.cache
 .vscode
 auth.json
+coverage/
 dbdata
 docker-compose.yml
 node_modules
