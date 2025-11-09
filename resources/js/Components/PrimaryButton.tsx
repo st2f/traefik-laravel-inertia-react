@@ -1,4 +1,4 @@
-export default function PrimaryButton({ className = '', disabled, children, ...props }) {
+export default function PrimaryButton({ className = '', disabled = false, children, ...props }) {
   return (
     <button
       {...props}
@@ -7,7 +7,7 @@ export default function PrimaryButton({ className = '', disabled, children, ...p
           disabled && 'opacity-25'
         } ` + className
       }
-      disabled={disabled}
+      disabled={disabled || false}
     >
       {children}
     </button>

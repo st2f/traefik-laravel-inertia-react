@@ -26,7 +26,8 @@
   "include": [
     "resources/js/**/*.ts",
     "resources/js/**/*.tsx",
-    "resources/js/**/*.test.tsx"
+    "resources/js/**/*.test.tsx",
+    "../laravel_q/resources/js/types/ziggy.d.ts"
   ],
   "exclude": ["node_modules", "public", "vendor"]
 }

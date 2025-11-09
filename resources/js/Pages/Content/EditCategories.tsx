@@ -128,6 +128,7 @@ export default function Edit({ auth }) {
                   id={defaultNewId}
                   type="text"
                   className="mt-1 block w-full"
+                  aria-label="newCategory"
                   onChange={(event)=>handleChangeNewCat(event)}
                   />
                 </div>
