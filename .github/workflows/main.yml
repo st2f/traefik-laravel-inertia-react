@@ -22,13 +22,134 @@ env:
 
 jobs:
 
-  check-vars:
+  prepare-dist:
     runs-on: self-hosted
     steps:
-      - name: list env variables
+      - uses: actions/checkout@v4
+      - name: Setup per-run DIST folder
         run: |
-            echo "DIST_ROOT=$DIST_ROOT"
-            echo "CACHE_ROOT=$CACHE_ROOT"
-            echo "SERVER_USER=$SERVER_USER"
-            echo "SERVER_IP=$SERVER_IP"
-            echo "SERVER_DESTINATION_DIR=$SERVER_DESTINATION_DIR"
+          rm -rf "$DIST_ROOT"
+          mkdir -p "$DIST_ROOT"
+          cp -R * "$DIST_ROOT/"
+      - name: Verify DIST_ROOT setup
+        run: ls -al "$DIST_ROOT"
+
+  install-deps:
+    needs: prepare-dist
+    runs-on: self-hosted
+    strategy:
+      matrix:
+        type: [node, php]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies with local hash cache
+        uses: ./.github/actions/dependency-cache
+        with:
+          dist_root: ${{ env.DIST_ROOT }}
+          cache_root: ${{ env.CACHE_ROOT }}
+          type: ${{ matrix.type }}
+
+  build-assets:
+    needs: install-deps
+    runs-on: self-hosted
+    steps:
+      - name: Build front-end assets
+        run: |
+          cd "$DIST_ROOT"
+          npm run build
+
+  npm-tests:
+    needs: build-assets
+    runs-on: self-hosted
+    steps:
+      - name: Run npm tests
+        run: |
+          set -euo pipefail
+          cd "$DIST_ROOT"
+          export LARAVEL_BYPASS_ENV_CHECK=1
+          npm audit
+          npm run lint
+          npm run test:ci
+
+  php-tests:
+    needs: build-assets
+    runs-on: self-hosted
+    steps:
+      - name: Run PHP tests
+        run: |
+          set -euo pipefail
+          cd "$DIST_ROOT"
+          composer install --no-interaction --prefer-dist --optimize-autoloader
+          vendor/bin/phpstan analyse --level 0 app/
+          composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
+
+  deploy-test:
+    needs: [npm-tests, php-tests]
+    if: github.event_name == 'release' || github.ref == 'refs/heads/main'
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify build artifacts
+        run: |
+          for dir in node_modules vendor public/build; do
+            if [ ! -d "$DIST_ROOT/$dir" ]; then
+              echo "❌ Missing: $DIST_ROOT/$dir"
+              exit 1
+            fi
+          done
+          echo "✅ All required build artifacts present."
+      - name: Deploy via rsync
+        run: |
+          set -e
+          mkdir -p ~/.ssh
+          eval $(ssh-agent -s)
+          ssh-add - <<< "$SSH_KEY_VPS"
+          ssh-keyscan -t rsa -H $SERVER_IP >> ~/.ssh/known_hosts
+          rsync -rhz --delay-updates --stats --delete-before --exclude-from=./.exclude-rsync \
+            "$DIST_ROOT/" "$SERVER_USER@$SERVER_IP:$SERVER_DESTINATION_DIR"
+
+  prepare-e2e-env:
+    needs: [npm-tests, php-tests]
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load CI environment variables
+        run: cp .env-ci "$DIST_ROOT/.env"
+      - name: Inject secrets into .env
+        run: |
+          set -euo pipefail
+          cd "$DIST_ROOT"
+          cat >> .env <<EOF
+          TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD }}
+          TEST_USER_NAME=${{ secrets.TEST_USER_NAME }}
+          EOF
+
+  e2e-tests:
+    needs: [deploy-test, prepare-e2e-env]
+    runs-on: self-hosted
+    steps:
+      - name: Run Playwright tests (smoke or full)
+        run: |
+          cd "$DIST_ROOT"
+          if [ "${GITHUB_REF}" = "refs/heads/regression" ]; then
+            npx playwright test
+          else
+            npx playwright test --grep @smoke
+          fi
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: ${{ env.DIST_ROOT }}/playwright-report/
+
+  cleanup:
+    needs: [e2e-tests]
+    if: always()
+    runs-on: self-hosted
+    steps:
+      - name: Clean up DIST folder
+        run: |
+          echo "🧹 Cleaning up run folder..."
+          rm -rf "$DIST_ROOT"
