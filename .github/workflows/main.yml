@@ -1,14 +1,20 @@
 name: Inertia Build, Deploy Test Server & E2E
 
-concurrency:
-  group: production
-  cancel-in-progress: true
-
 on:
   push:
     branches: [main, testing]
+  workflow_dispatch:
+  release:
+    types: [published]
+
+# Allow one run per branch at a time, but parallel across branches
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
+  DIST_ROOT: /dist/${{ github.repository_owner }}_${{ github.event.repository.name }}_${{ github.run_id }}
+  CACHE_ROOT: /cache/${{ github.repository_owner }}_${{ github.event.repository.name }}
   SERVER_USER: ${{ secrets.SERVER_USER }}
   SERVER_IP: ${{ secrets.SERVER_IP }}
   SSH_KEY_VPS: ${{ secrets.SSH_KEY_VPS }}
@@ -16,138 +22,13 @@ env:
 
 jobs:
 
-  prepare-dist:
+  check-vars:
     runs-on: self-hosted
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup per-repo DIST folder
+      - name: list env variables
         run: |
-          DIST_ROOT=/dist/${GITHUB_REPOSITORY//\//_}
-          rm -Rf "$DIST_ROOT"
-          mkdir -p "$DIST_ROOT"
-          cp -R * "$DIST_ROOT/"
-
-  install-deps:
-    needs: prepare-dist
-    runs-on: self-hosted
-    strategy:
-      matrix:
-        type: [ node, php ]
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install dependencies with local hash cache
-        uses: ./.github/actions/dependency-cache
-        with:
-          dist_root: /dist/${GITHUB_REPOSITORY//\//_}
-          cache_root: /cache/${GITHUB_REPOSITORY//\//_}
-          type: ${{ matrix.type }}
-
-  build-assets:
-    needs: install-deps
-    runs-on: self-hosted
-    steps:
-      - name: Build front-end assets
-        run: |
-          DIST_ROOT=/dist/${GITHUB_REPOSITORY//\//_}
-          cd "$DIST_ROOT"
-          npm run build
-
-  npm-tests:
-    needs: build-assets
-    runs-on: self-hosted
-    steps:
-      - name: Run npm tests
-        run: |
-          DIST_ROOT=/dist/${GITHUB_REPOSITORY//\//_}
-          set -euo pipefail
-          cd "$DIST_ROOT"
-          export LARAVEL_BYPASS_ENV_CHECK=1
-          npm audit --moderate
-          npm run lint
-          npm run test:ci
-
-  php-tests:
-    needs: build-assets
-    runs-on: self-hosted
-    steps:
-      - name: Run php tests
-        run: |
-          set -euo pipefail
-          DIST_ROOT=/dist/${GITHUB_REPOSITORY//\//_}
-          cd "$DIST_ROOT"
-          composer install --no-interaction --prefer-dist --optimize-autoloader
-          vendor/bin/phpstan analyse --level 0 app/
-          composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
-
-  deploy-test:
-    needs: [npm-tests, php-tests]
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v4
-      - name: Verify build artifacts
-        run: |
-          DIST_ROOT=/dist/${GITHUB_REPOSITORY//\//_}
-          for dir in node_modules vendor public/build; do
-            if [ ! -d "$DIST_ROOT/$dir" ]; then
-              echo "❌ Missing: $DIST_ROOT/$dir"
-              exit 1
-            fi
-          done
-          echo "✅ All required build artifacts present."
-      - name: Deploy via rsync
-        run: |
-          set -e
-          DIST_ROOT=/dist/${GITHUB_REPOSITORY//\//_}
-          mkdir -p ~/.ssh
-          eval $(ssh-agent -s)
-          ssh-add - <<< "$SSH_KEY_VPS"
-          ssh-keyscan -t rsa -H $SERVER_IP >> ~/.ssh/known_hosts
-          rsync -rhz --delay-updates --stats --delete-before --exclude-from=./.exclude-rsync \
-            "$DIST_ROOT/" "$SERVER_USER@$SERVER_IP:$SERVER_DESTINATION_DIR"
-
-  prepare-e2e-env:
-    needs: [npm-tests, php-tests]
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v4
-      - name: Load CI environment variables
-        run: cp .env-ci /dist/${GITHUB_REPOSITORY//\//_}/.env
-      - name: Inject secrets into `.env`
-        run: |
-          set -euo pipefail
-          DIST_ROOT=/dist/${GITHUB_REPOSITORY//\//_}
-          cd "$DIST_ROOT"
-          cat >> .env <<EOF
-          TEST_USER_EMAIL=${{ secrets.TEST_USER_EMAIL }}
-          TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD }}
-          TEST_USER_NAME=${{ secrets.TEST_USER_NAME }}
-          EOF
-
-  e2e-tests:
-    needs: [deploy-test, prepare-e2e-env]
-    runs-on: self-hosted
-    steps:
-      - name: Install Playwright browsers
-        run: |
-          DIST_ROOT=/dist/${GITHUB_REPOSITORY//\//_}
-          cd "$DIST_ROOT"
-          npx playwright install chromium
-      - name: Run Playwright tests - smoke
-        if: github.ref != 'refs/heads/main'
-        run: |
-          DIST_ROOT=/dist/${GITHUB_REPOSITORY//\//_}
-          cd "$DIST_ROOT"
-          npx playwright test --grep @smoke
-
-      - name: Run Playwright tests
-        if: github.ref == 'refs/heads/main'
-        run: |
-          DIST_ROOT=/dist/${GITHUB_REPOSITORY//\//_}
-          cd "$DIST_ROOT"
-          npx playwright test
-      - name: Upload Playwright report on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: /dist/${GITHUB_REPOSITORY//\//_}/playwright-report/
+            echo "DIST_ROOT=$DIST_ROOT"
+            echo "CACHE_ROOT=$CACHE_ROOT"
+            echo "SERVER_USER=$SERVER_USER"
+            echo "SERVER_IP=$SERVER_IP"
+            echo "SERVER_DESTINATION_DIR=$SERVER_DESTINATION_DIR"
