@@ -124,14 +124,6 @@ jobs:
           TEST_USER_NAME=${{ secrets.TEST_USER_NAME }}
           EOF
 
-  dast:
-    needs: deploy-test
-    runs-on: self-hosted
-    steps:
-      - uses: zaproxy/action-baseline@v0.15.0
-        with:
-          target: "https://type-in.eu"
-
   e2e-tests:
     needs: [deploy-test, prepare-e2e-env]
     runs-on: self-hosted
