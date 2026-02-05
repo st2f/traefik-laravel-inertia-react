@@ -73,13 +73,13 @@ jobs:
           TEST_USER_PASSWORD=${{ secrets.TEST_USER_PASSWORD }}
           TEST_USER_NAME=${{ secrets.TEST_USER_NAME }}
           EOF
-
   e2e-tests:
     needs: [prepare-e2e-env]
     runs-on: self-hosted
     steps:
       - name: Run Playwright tests (smoke or full)
         run: |
+          npx playwright install chromium
           cd "$DIST_ROOT"
           if [ "${GITHUB_REF}" = "refs/heads/regression" ]; then
             npx playwright test
@@ -95,7 +95,7 @@ jobs:
 
   cleanup:
     needs: [e2e-tests]
-    if: success()
+    if: always()
     runs-on: self-hosted
     steps:
       - name: Clean up DIST folder
