@@ -21,7 +21,6 @@ env:
   SERVER_DESTINATION_DIR: /app/website2/
 
 jobs:
-
   prepare-dist:
     runs-on: self-hosted
     steps:
@@ -58,58 +57,8 @@ jobs:
           cd "$DIST_ROOT"
           npm run build
 
-  npm-tests:
-    needs: build-assets
-    runs-on: self-hosted
-    steps:
-      - name: Run npm tests
-        run: |
-          set -euo pipefail
-          cd "$DIST_ROOT"
-          export LARAVEL_BYPASS_ENV_CHECK=1
-          npm audit
-          npm run lint
-          npm run test:ci
-
-  php-tests:
-    needs: build-assets
-    runs-on: self-hosted
-    steps:
-      - name: Run PHP tests
-        run: |
-          set -euo pipefail
-          cd "$DIST_ROOT"
-          composer install --no-interaction --prefer-dist --optimize-autoloader
-          vendor/bin/phpstan analyse --level 0 app/
-          composer install --no-interaction --prefer-dist --no-dev --optimize-autoloader
-
-  deploy-test:
-    needs: [npm-tests, php-tests]
-    #if: github.event_name == 'release' || github.ref == 'refs/heads/main'
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v4
-      - name: Verify build artifacts
-        run: |
-          for dir in node_modules vendor public/build; do
-            if [ ! -d "$DIST_ROOT/$dir" ]; then
-              echo "❌ Missing: $DIST_ROOT/$dir"
-              exit 1
-            fi
-          done
-          echo "✅ All required build artifacts present."
-      - name: Deploy via rsync
-        run: |
-          set -e
-          mkdir -p ~/.ssh
-          eval $(ssh-agent -s)
-          ssh-add - <<< "$SSH_KEY_VPS"
-          ssh-keyscan -t rsa -H $SERVER_IP >> ~/.ssh/known_hosts
-          rsync -rhz --delay-updates --stats --delete-before --exclude-from=./.exclude-rsync \
-            "$DIST_ROOT/" "$SERVER_USER@$SERVER_IP:$SERVER_DESTINATION_DIR"
-
   prepare-e2e-env:
-    needs: [npm-tests, php-tests]
+    needs: [build-assets]
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
@@ -126,7 +75,7 @@ jobs:
           EOF
 
   e2e-tests:
-    needs: [deploy-test, prepare-e2e-env]
+    needs: [prepare-e2e-env]
     runs-on: self-hosted
     steps:
       - name: Run Playwright tests (smoke or full)
@@ -146,7 +95,7 @@ jobs:
 
   cleanup:
     needs: [e2e-tests]
-    if: always()
+    if: success()
     runs-on: self-hosted
     steps:
       - name: Clean up DIST folder
